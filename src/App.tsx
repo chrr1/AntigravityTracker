@@ -11,14 +11,19 @@ import type { Account, Model } from "./types";
 
 function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
   const { S, actions } = useStore(uid), { ref, v, zoomAt, fit } = usePanZoom(), inner = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null), dlg = useRef<HTMLDialogElement>(null);
-  const [name, setName] = useState(""), [target, setTarget] = useState<Pair | null>(null), [dd, setDd] = useState(0), [dh, setDh] = useState(0), [dm, setDm] = useState(0);
+  const [name, setName] = useState(""), [target, setTarget] = useState<Pair | null>(null), [dd, setDd] = useState(""), [dh, setDh] = useState(""), [dm, setDm] = useState("");
   useEffect(() => { target ? dlg.current?.showModal() : dlg.current?.close(); }, [target]);
   const A = [...S.accounts].sort((x, y) => avail(y) / (y.models.length || 1) - avail(x) / (x.models.length || 1));
   const all: Pair[] = S.accounts.flatMap(a => a.models.map(m => ({ a, m })));
   const lim = all.filter(x => left(x.m) > 0).sort((x, y) => left(x.m) - left(y.m)), av = all.length - lim.length, canAdd = S.accounts.length < MAX;
   const add = () => { const n = name.trim(); if (n) { actions.addAccount(n); setName(""); } };
-  const resetForm = () => { setTarget(null); setDd(0); setDh(0); setDm(0); };
-  const save = () => { const ms = (dd * 24 + dh) * 36e5 + dm * 6e4; if (target && ms > 0) actions.setReset(target.a.id, target.m.id, Date.now() + ms, ms); resetForm(); };
+  const resetForm = () => { setTarget(null); setDd(""); setDh(""); setDm(""); };
+  const save = () => {
+    const d = parseInt(dd, 10) || 0, h = parseInt(dh, 10) || 0, m = parseInt(dm, 10) || 0;
+    const ms = (d * 24 + h) * 36e5 + m * 6e4;
+    if (target && ms > 0) actions.setReset(target.a.id, target.m.id, Date.now() + ms, ms);
+    resetForm();
+  };
   const applyPreset = (d: number, h: number, m: number) => { const ms = (d * 24 + h) * 36e5 + m * 6e4; if (target && ms > 0) actions.setReset(target.a.id, target.m.id, Date.now() + ms, ms); resetForm(); };
   const addModel = (a: Account) => { const n = prompt("Nama model (mis. Gemini Pro)"); if (n) actions.addModel(a.id, n.trim().slice(0, 40)); };
   const remove = (a: Account) => { if (confirm("Hapus akun " + a.name + "?")) actions.removeAccount(a.id); };
@@ -49,9 +54,9 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
         <button type="button" className="sm" onClick={() => applyPreset(1, 0, 0)}>24 jam</button>
       </div>
       <div className="f">
-        <label>Hari<input type="number" min={0} value={dd} onChange={e => setDd(Math.max(0, +e.target.value))} /></label>
-        <label>Jam<input type="number" min={0} value={dh} onChange={e => setDh(Math.max(0, +e.target.value))} /></label>
-        <label>Menit<input type="number" min={0} value={dm} onChange={e => setDm(Math.max(0, +e.target.value))} /></label>
+        <label>Hari<input type="text" inputMode="numeric" placeholder="0" value={dd} onChange={e => setDd(e.target.value.replace(/\D/g, ""))} onKeyDown={e => e.key === "Enter" && save()} /></label>
+        <label>Jam<input type="text" inputMode="numeric" placeholder="0" value={dh} onChange={e => setDh(e.target.value.replace(/\D/g, ""))} onKeyDown={e => e.key === "Enter" && save()} /></label>
+        <label>Menit<input type="text" inputMode="numeric" placeholder="0" value={dm} onChange={e => setDm(e.target.value.replace(/\D/g, ""))} onKeyDown={e => e.key === "Enter" && save()} /></label>
       </div>
       <div className="row">
         <button type="button" className="pb" onClick={resetForm}>Batal</button>
