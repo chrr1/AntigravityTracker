@@ -1,10 +1,8 @@
 import type { Account, Model } from "./types";
 export const MAX = 20, DAY = 864e5;
 export const DEFAULT_MODELS = [
-  "Gemini 2.5 Flash",
-  "Gemini 2.5 Pro",
-  "Claude 3.7 Sonnet",
-  "Claude 3.5 Sonnet",
+  "Gemini 3.8 Flash",
+  "Claude Sonnet 4.6"
 ];
 export const uid = () => Math.random().toString(36).slice(2, 9);
 export const left = (m: Model) => (m.resetAt ? Math.max(0, m.resetAt - Date.now()) : 0);
