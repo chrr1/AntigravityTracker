@@ -13,7 +13,7 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
   const { S, actions } = useStore(uid), { ref, v, zoomAt, fit } = usePanZoom(), inner = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null), dlg = useRef<HTMLDialogElement>(null);
   const [name, setName] = useState(""), [target, setTarget] = useState<Pair | null>(null), [dd, setDd] = useState(""), [dh, setDh] = useState(""), [dm, setDm] = useState("");
   useEffect(() => { target ? dlg.current?.showModal() : dlg.current?.close(); }, [target]);
-  const A = [...S.accounts].sort((x, y) => avail(y) / (y.models.length || 1) - avail(x) / (x.models.length || 1));
+  const A = S.accounts;
   const all: Pair[] = S.accounts.flatMap(a => a.models.map(m => ({ a, m })));
   const lim = all.filter(x => left(x.m) > 0).sort((x, y) => left(x.m) - left(y.m)), av = all.length - lim.length, canAdd = S.accounts.length < MAX;
   const add = () => { const n = name.trim(); if (n) { actions.addAccount(n); setName(""); } };
@@ -35,9 +35,9 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
       <Wires inner={inner} z={v.z} />
       <div className="cols">
         <div className="c">{A.length ? A.map(a => <AccountNode key={a.id} a={a} onFree={(a, m) => actions.setReset(a.id, m.id, null)} onLimit={(a, m) => setTarget({ a, m })} onAddModel={addModel} onRemove={remove} />) : <div className="nd">Belum ada akun. Tambahkan lewat kolom di bawah.</div>}</div>
-        <div className="c"><GeminiReadyNode accounts={S.accounts} /><ClaudeReadyNode accounts={S.accounts} /></div>
         <div className="c"><SummaryNode S={S} lim={lim} av={av} total={all.length} /><HistoryNode S={S} /></div>
         <div className="c"><TimelineNode lim={lim} /></div>
+        <div className="c"><GeminiReadyNode accounts={S.accounts} /><ClaudeReadyNode accounts={S.accounts} /></div>
       </div></div></div>
     <div className="zm" style={{ touchAction: "manipulation" }}><button title="Perbesar" onClick={() => zoomAt(innerWidth / 2, innerHeight / 2, 1.2)}>+</button><button title="Perkecil" onClick={() => zoomAt(innerWidth / 2, innerHeight / 2, 1 / 1.2)}>−</button><button title="Atur ulang" onClick={fit}>⤢</button></div>
     <div className="cn" style={{ left: 16 }}>A: {S.accounts.length}/{MAX}<br />M: {all.length}</div><div className="cn" style={{ right: 60, textAlign: "right" }}>L: {lim.length}<br />T: {av}</div>

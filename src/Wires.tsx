@@ -6,12 +6,33 @@ export default function Wires({ inner, z }: { inner: RefObject<HTMLDivElement>; 
     const I = inner.current; if (!I) return; const r0 = I.getBoundingClientRect();
     const p = (el: Element, side: "l" | "r", f = .5): [number, number] => { const r = el.getBoundingClientRect(); return [((side === "r" ? r.right : r.left) - r0.left) / z, (r.top + r.height * f - r0.top) / z]; };
     const cv = (a: number[], b: number[]) => `M${a[0].toFixed(1)} ${a[1].toFixed(1)} C ${(a[0] + 60).toFixed(1)} ${a[1].toFixed(1)},${(b[0] - 60).toFixed(1)} ${b[1].toFixed(1)},${b[0].toFixed(1)} ${b[1].toFixed(1)} `;
-    const sm = I.querySelector("#sm"), pv = I.querySelector("#pv"), gm = I.querySelector("#gemini-node"), cl = I.querySelector("#claude-node"), ns = [...I.querySelectorAll("[data-n=a]")]; let s = "";
-    if (gm && ns.length) ns.forEach((n, i) => { s += cv(p(n, "r"), p(gm, "l", (i + 1) / (ns.length + 1))); });
-    if (cl && ns.length) ns.forEach((n, i) => { s += cv(p(n, "r"), p(cl, "l", (i + 1) / (ns.length + 1))); });
-    if (gm && sm) s += cv(p(gm, "r"), p(sm, "l", .35));
-    if (cl && sm) s += cv(p(cl, "r"), p(sm, "l", .65));
+    const sm = I.querySelector("#sm"),
+      pv = I.querySelector("#pv"),
+      hi = I.querySelector("#hi"),
+      gm = I.querySelector("#gemini-node"),
+      cl = I.querySelector("#claude-node"),
+      ns = [...I.querySelectorAll("[data-n=a]")];
+    let s = "";
+
+    // 1. Akun -> Ringkasan
+    if (sm) ns.forEach((n, i) => { s += cv(p(n, "r"), p(sm, "l", (i + 1) / (ns.length + 1))); });
+
+    // 2. Ringkasan -> Linimasa
     if (sm && pv) s += cv(p(sm, "r"), p(pv, "l", .3));
+
+    // 3. Ringkasan -> Riwayat (vertikal ke bawah)
+    if (sm && hi) {
+      const rSm = sm.getBoundingClientRect(), rHi = hi.getBoundingClientRect();
+      const ax = ((rSm.left + rSm.right) / 2 - r0.left) / z;
+      const ay = (rSm.bottom - r0.top) / z;
+      const bx = ((rHi.left + rHi.right) / 2 - r0.left) / z;
+      const by = (rHi.top - r0.top) / z;
+      s += `M${ax.toFixed(1)} ${ay.toFixed(1)} C ${ax.toFixed(1)} ${(ay + 10).toFixed(1)},${bx.toFixed(1)} ${(by - 10).toFixed(1)},${bx.toFixed(1)} ${by.toFixed(1)} `;
+    }
+
+    // 4. Linimasa -> Gemini & Claude
+    if (pv && gm) s += cv(p(pv, "r", .35), p(gm, "l", .5));
+    if (pv && cl) s += cv(p(pv, "r", .65), p(cl, "l", .5));
     const newBox = `0 0 ${I.offsetWidth} ${I.offsetHeight}`;
     setD(prev => prev !== s ? s : prev);
     setBox(prev => prev !== newBox ? newBox : prev);

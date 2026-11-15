@@ -129,7 +129,7 @@ export function HistoryNode({ S }: { S: State }) {
   const end = +e, b = Array(n).fill(0) as number[], mc: Record<string, number> = {};
   S.ev.forEach(v => { const i = Math.floor((end - v.at) / sp); if (i >= 0 && i < n) { b[n - 1 - i]++; mc[v.model] = (mc[v.model] || 0) + 1; } });
   const mx = Math.max(1, ...b), w = 250 / n, tot = b.reduce((x, y) => x + y, 0), top = Object.entries(mc).sort((x, y) => y[1] - x[1])[0];
-  return <div><Label t="Riwayat limit" /><div className="nd" style={{ width: 250 }}>
+  return <div><Label t="Riwayat limit" /><div className="nd" id="hi" style={{ width: 250 }}>
     <div className="hb">{(["d", "w"] as const).map(k => <button key={k} className={"sm " + (H === k ? "on" : "")} onClick={() => setH(k)}>{k === "d" ? "7 hari" : "6 minggu"}</button>)}</div>
     <svg className="ch" viewBox="0 0 250 100" style={{ width: "100%", height: "auto", display: "block", position: "static", minWidth: 0 }}>
       {b.map((c, i) => { const h = c / mx * 60, x = i * w + w * .18, t = new Date(end - (n - i) * sp), lb = H === "d" ? t.toLocaleDateString("id-ID", { weekday: "short" }) : `${t.getDate()}/${t.getMonth() + 1}`;
