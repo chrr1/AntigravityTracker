@@ -4,7 +4,7 @@ export function usePanZoom() {
   const ref = useRef<HTMLDivElement>(null), [v, setV] = useState<V>({ x: 0, y: 0, z: 1 }), vr = useRef(v), moved = useRef(false);
   const set = (n: V) => { vr.current = n; setV(n); };
   const zoomAt = (cx: number, cy: number, f: number) => { const { x, y, z } = vr.current, nz = Math.min(2.5, Math.max(.3, z * f)); set({ x: cx - (cx - x) * nz / z, y: cy - (cy - y) * nz / z, z: nz }); };
-  const fit = () => { const z = Math.min(1, innerWidth / 1040); set({ x: (innerWidth - 1000 * z) / 2, y: 0, z }); };
+  const fit = () => { const z = Math.min(1, innerWidth / 1440); set({ x: (innerWidth - 1380 * z) / 2, y: 0, z }); };
   useEffect(() => {
     const el = ref.current!, P = new Map<number, [number, number]>(); let pd = 0; fit();
     const dist = () => { const [a, b] = [...P.values()]; return Math.hypot(a[0] - b[0], a[1] - b[1]) || 1; };

@@ -4,6 +4,111 @@ import { DAY, MAX, avail, col, fmt, left, when } from "./lib";
 const Label = ({ t }: { t: string }) => <div className="lb"><i />{t}</div>;
 export type Pair = { a: Account; m: Model };
 
+const isGemini = (name: string) => name.toLowerCase().includes("gemini");
+const isClaude = (name: string) => name.toLowerCase().includes("claude");
+
+export function GeminiReadyNode({ accounts }: { accounts: Account[] }) {
+  const readyList = accounts
+    .map(a => ({
+      account: a,
+      models: a.models.filter(m => isGemini(m.name) && left(m) <= 0),
+    }))
+    .filter(x => x.models.length > 0);
+
+  const totalReady = readyList.reduce((acc, x) => acc + x.models.length, 0);
+
+  return (
+    <div>
+      <Label t="Model Siap · Gemini" />
+      <div className="nd" id="gemini-node" style={{ width: 260, borderColor: "rgba(126, 170, 255, 0.35)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div className="nm" style={{ margin: 0, color: "#9ec5fe", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#4da3ff", display: "inline-block", boxShadow: "0 0 8px #4da3ff" }} />
+            Gemini Ready
+          </div>
+          <span style={{ fontSize: 11, background: "rgba(110, 168, 254, 0.15)", color: "#9ec5fe", padding: "2px 8px", borderRadius: 10, fontWeight: 500 }}>
+            {readyList.length} akun ({totalReady} model)
+          </span>
+        </div>
+        {readyList.length === 0 ? (
+          <div style={{ color: "var(--mute)", padding: "14px 4px", fontSize: 12, textAlign: "center" }}>
+            Semua model Gemini sedang limit
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {readyList.map(({ account, models }) => (
+              <div key={account.id} style={{ background: "#141414", border: "1px solid var(--bd)", borderRadius: 10, padding: "8px 10px" }}>
+                <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 5, color: "var(--tx)", wordBreak: "break-all" }}>
+                  {account.name}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {models.map(m => (
+                    <span key={m.id} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(123, 224, 138, 0.12)", color: "var(--ok)", padding: "2px 7px", borderRadius: 6, border: "1px solid rgba(123, 224, 138, 0.25)" }}>
+                      <span className="pt" style={{ width: 5, height: 5, background: "var(--ok)" }} />
+                      {m.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+export function ClaudeReadyNode({ accounts }: { accounts: Account[] }) {
+  const readyList = accounts
+    .map(a => ({
+      account: a,
+      models: a.models.filter(m => isClaude(m.name) && left(m) <= 0),
+    }))
+    .filter(x => x.models.length > 0);
+
+  const totalReady = readyList.reduce((acc, x) => acc + x.models.length, 0);
+
+  return (
+    <div>
+      <Label t="Model Siap · Claude" />
+      <div className="nd" id="claude-node" style={{ width: 260, borderColor: "rgba(255, 140, 100, 0.35)" }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+          <div className="nm" style={{ margin: 0, color: "#ffab91", display: "flex", alignItems: "center", gap: 6 }}>
+            <span style={{ width: 8, height: 8, borderRadius: "50%", background: "#ff8a65", display: "inline-block", boxShadow: "0 0 8px #ff8a65" }} />
+            Claude Ready
+          </div>
+          <span style={{ fontSize: 11, background: "rgba(255, 140, 100, 0.15)", color: "#ffab91", padding: "2px 8px", borderRadius: 10, fontWeight: 500 }}>
+            {readyList.length} akun ({totalReady} model)
+          </span>
+        </div>
+        {readyList.length === 0 ? (
+          <div style={{ color: "var(--mute)", padding: "14px 4px", fontSize: 12, textAlign: "center" }}>
+            Semua model Claude sedang limit
+          </div>
+        ) : (
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {readyList.map(({ account, models }) => (
+              <div key={account.id} style={{ background: "#141414", border: "1px solid var(--bd)", borderRadius: 10, padding: "8px 10px" }}>
+                <div style={{ fontWeight: 600, fontSize: 12, marginBottom: 5, color: "var(--tx)", wordBreak: "break-all" }}>
+                  {account.name}
+                </div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
+                  {models.map(m => (
+                    <span key={m.id} style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11, background: "rgba(123, 224, 138, 0.12)", color: "var(--ok)", padding: "2px 7px", borderRadius: 6, border: "1px solid rgba(123, 224, 138, 0.25)" }}>
+                      <span className="pt" style={{ width: 5, height: 5, background: "var(--ok)" }} />
+                      {m.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function AccountNode(p: { a: Account; onFree: (a: Account, m: Model) => void; onLimit: (a: Account, m: Model) => void; onAddModel: (a: Account) => void; onRemove: (a: Account) => void }) {
   const { a } = p;
   return <div><Label t="Akun" /><div className="nd" data-n="a"><div className="nm">{a.name}</div>

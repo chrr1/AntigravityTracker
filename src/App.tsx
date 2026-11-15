@@ -4,7 +4,7 @@ import { supabase } from "./supabase";
 import Login from "./Login";
 import { useStore } from "./useStore";
 import { usePanZoom } from "./usePanZoom";
-import { AccountNode, HistoryNode, SummaryNode, TimelineNode, type Pair } from "./Nodes";
+import { AccountNode, ClaudeReadyNode, GeminiReadyNode, HistoryNode, SummaryNode, TimelineNode, type Pair } from "./Nodes";
 import Wires from "./Wires";
 import { MAX, avail, fmt, left, when } from "./lib";
 import type { Account, Model } from "./types";
@@ -35,6 +35,7 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
       <Wires inner={inner} z={v.z} />
       <div className="cols">
         <div className="c">{A.length ? A.map(a => <AccountNode key={a.id} a={a} onFree={(a, m) => actions.setReset(a.id, m.id, null)} onLimit={(a, m) => setTarget({ a, m })} onAddModel={addModel} onRemove={remove} />) : <div className="nd">Belum ada akun. Tambahkan lewat kolom di bawah.</div>}</div>
+        <div className="c"><GeminiReadyNode accounts={S.accounts} /><ClaudeReadyNode accounts={S.accounts} /></div>
         <div className="c"><SummaryNode S={S} lim={lim} av={av} total={all.length} /><HistoryNode S={S} /></div>
         <div className="c"><TimelineNode lim={lim} /></div>
       </div></div></div>
