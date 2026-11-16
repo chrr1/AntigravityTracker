@@ -2,7 +2,18 @@ import { useEffect, useRef, useState } from "react";
 type V = { x: number; y: number; z: number };
 export function usePanZoom() {
   const ref = useRef<HTMLDivElement>(null), [v, setV] = useState<V>({ x: 0, y: 0, z: 1 }), vr = useRef(v), moved = useRef(false);
-  const set = (n: V) => { vr.current = n; setV(n); };
+  const rafId = useRef<number | null>(null);
+
+  const set = (n: V) => {
+    vr.current = n;
+    if (rafId.current === null) {
+      rafId.current = requestAnimationFrame(() => {
+        setV(vr.current);
+        rafId.current = null;
+      });
+    }
+  };
+
   const zoomAt = (cx: number, cy: number, f: number) => { const { x, y, z } = vr.current, nz = Math.min(2.5, Math.max(.3, z * f)); set({ x: cx - (cx - x) * nz / z, y: cy - (cy - y) * nz / z, z: nz }); };
   const fit = () => { const z = Math.min(1, innerWidth / 1440); set({ x: (innerWidth - 1380 * z) / 2, y: 0, z }); };
   useEffect(() => {
@@ -17,7 +28,10 @@ export function usePanZoom() {
     const click = (e: MouseEvent) => { if (moved.current) { e.stopPropagation(); e.preventDefault(); moved.current = false; } };
     el.addEventListener("wheel", wheel, { passive: false }); el.addEventListener("pointerdown", down); el.addEventListener("click", click, true);
     addEventListener("pointermove", move); addEventListener("pointerup", up); addEventListener("pointercancel", up);
-    return () => { el.removeEventListener("wheel", wheel); el.removeEventListener("pointerdown", down); el.removeEventListener("click", click, true); removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up); };
+    return () => {
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      el.removeEventListener("wheel", wheel); el.removeEventListener("pointerdown", down); el.removeEventListener("click", click, true); removeEventListener("pointermove", move); removeEventListener("pointerup", up); removeEventListener("pointercancel", up);
+    };
   }, []);
   return { ref, v, zoomAt, fit };
 }

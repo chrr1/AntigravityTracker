@@ -1,5 +1,7 @@
-import { useEffect, useLayoutEffect, useState, type RefObject } from "react";
-export default function Wires({ inner, z }: { inner: RefObject<HTMLDivElement>; z: number }) {
+import { memo, useEffect, useLayoutEffect, useState, type RefObject } from "react";
+import type { Account } from "./types";
+
+function WiresComponent({ inner, z }: { inner: RefObject<HTMLDivElement>; z: number; accounts?: Account[] }) {
   const [d, setD] = useState(""), [box, setBox] = useState("0 0 1000 800"), [, rs] = useState(0);
   useEffect(() => { const f = () => rs(n => n + 1); addEventListener("resize", f); return () => removeEventListener("resize", f); }, []);
   useLayoutEffect(() => {
@@ -39,3 +41,7 @@ export default function Wires({ inner, z }: { inner: RefObject<HTMLDivElement>; 
   });
   return <svg className="w" viewBox={box}><path d={d} /></svg>;
 }
+
+export default memo(WiresComponent, (prev, next) => {
+  return prev.z === next.z && prev.accounts === next.accounts;
+});

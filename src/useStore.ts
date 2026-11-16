@@ -96,9 +96,33 @@ export function useStore(user: string) {
 
   useEffect(() => {
     pull();
-    const a = setInterval(pull, 45000), b = setInterval(() => tick(n => n + 1), 30000), v = () => { if (!document.hidden) pull(); };
+    let pollTimer: number | undefined;
+    const startPoll = () => {
+      if (!pollTimer) pollTimer = window.setInterval(pull, 45000);
+    };
+    const stopPoll = () => {
+      if (pollTimer) { clearInterval(pollTimer); pollTimer = undefined; }
+    };
+    if (!document.hidden) startPoll();
+
+    const v = () => {
+      if (document.hidden) {
+        stopPoll();
+      } else {
+        pull();
+        startPoll();
+      }
+    };
+    const b = setInterval(() => {
+      if (!document.hidden) tick(n => n + 1);
+    }, 30000);
+
     document.addEventListener("visibilitychange", v);
-    return () => { clearInterval(a); clearInterval(b); document.removeEventListener("visibilitychange", v); };
+    return () => {
+      stopPoll();
+      clearInterval(b);
+      document.removeEventListener("visibilitychange", v);
+    };
   }, [pull]);
 
   const actions = {

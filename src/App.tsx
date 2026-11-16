@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
 import Login from "./Login";
@@ -14,8 +14,10 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
   const [name, setName] = useState(""), [target, setTarget] = useState<Pair | null>(null), [dd, setDd] = useState(""), [dh, setDh] = useState(""), [dm, setDm] = useState("");
   useEffect(() => { target ? dlg.current?.showModal() : dlg.current?.close(); }, [target]);
   const A = S.accounts;
-  const all: Pair[] = S.accounts.flatMap(a => a.models.map(m => ({ a, m })));
-  const lim = all.filter(x => left(x.m) > 0).sort((x, y) => left(x.m) - left(y.m)), av = all.length - lim.length, canAdd = S.accounts.length < MAX;
+  const all: Pair[] = useMemo(() => S.accounts.flatMap(a => a.models.map(m => ({ a, m }))), [S.accounts]);
+  const lim = useMemo(() => all.filter(x => left(x.m) > 0).sort((x, y) => left(x.m) - left(y.m)), [all]);
+  const av = useMemo(() => all.length - lim.length, [all.length, lim.length]);
+  const canAdd = S.accounts.length < MAX;
   const add = () => { const n = name.trim(); if (n) { actions.addAccount(n); setName(""); } };
   const resetForm = () => { setTarget(null); setDd(""); setDh(""); setDm(""); };
   const save = () => {
@@ -25,16 +27,18 @@ function Tracker({ uid, onSignOut }: { uid: string; onSignOut?: () => void }) {
     resetForm();
   };
   const applyPreset = (d: number, h: number, m: number) => { const ms = (d * 24 + h) * 36e5 + m * 6e4; if (target && ms > 0) actions.setReset(target.a.id, target.m.id, Date.now() + ms, ms); resetForm(); };
-  const addModel = (a: Account) => { const n = prompt("Nama model (mis. Gemini Pro)"); if (n) actions.addModel(a.id, n.trim().slice(0, 40)); };
-  const remove = (a: Account) => { if (confirm("Hapus akun " + a.name + "?")) actions.removeAccount(a.id); };
+  const onFree = useCallback((a: Account, m: Model) => actions.setReset(a.id, m.id, null), [actions]);
+  const onLimit = useCallback((a: Account, m: Model) => setTarget({ a, m }), []);
+  const onAddModel = useCallback((a: Account) => { const n = prompt("Nama model (mis. Gemini Pro)"); if (n) actions.addModel(a.id, n.trim().slice(0, 40)); }, [actions]);
+  const onRemove = useCallback((a: Account) => { if (confirm("Hapus akun " + a.name + "?")) actions.removeAccount(a.id); }, [actions]);
   const imp = () => { const t = prompt("Tempel teks cadangan:"); if (!t) return; try { const j = JSON.parse(t); if (Array.isArray(j.accounts)) actions.replace(j); } catch { alert("Format cadangan tidak valid"); } };
   return <>
     <div className="top"><div className="pl"><button className="pb" onClick={() => prompt("Salin teks ini sebagai cadangan:", JSON.stringify(S))}>Ekspor</button><button className="pb" onClick={imp}>Impor</button>{onSignOut && <button className="pb" onClick={onSignOut}>Keluar</button>}</div>
       <div className="pl">{canAdd && <button className="pb w" onClick={() => input.current?.focus()}>Tambah akun</button>}</div></div>
     <div className="cv" ref={ref}><div className="in" ref={inner} style={{ transform: `translate(${v.x}px,${v.y}px) scale(${v.z})` }}>
-      <Wires inner={inner} z={v.z} />
+      <Wires inner={inner} z={v.z} accounts={S.accounts} />
       <div className="cols">
-        <div className="c">{A.length ? A.map(a => <AccountNode key={a.id} a={a} onFree={(a, m) => actions.setReset(a.id, m.id, null)} onLimit={(a, m) => setTarget({ a, m })} onAddModel={addModel} onRemove={remove} />) : <div className="nd">Belum ada akun. Tambahkan lewat kolom di bawah.</div>}</div>
+        <div className="c">{A.length ? A.map(a => <AccountNode key={a.id} a={a} onFree={onFree} onLimit={onLimit} onAddModel={onAddModel} onRemove={onRemove} />) : <div className="nd">Belum ada akun. Tambahkan lewat kolom di bawah.</div>}</div>
         <div className="c"><SummaryNode S={S} lim={lim} av={av} total={all.length} /><HistoryNode S={S} /></div>
         <div className="c"><TimelineNode lim={lim} /></div>
         <div className="c"><GeminiReadyNode accounts={S.accounts} /><ClaudeReadyNode accounts={S.accounts} /></div>
